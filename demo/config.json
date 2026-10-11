@@ -1,0 +1,11 @@
+{
+  "bot_name": "trip_helper_bot",
+  "title": "Bot chats (demo)",
+  "journals": ["journal.jsonl"],
+  "chats": {
+    "100000001": {"name": "Alex", "role": "owner"},
+    "100000002": {"name": "Sam", "role": "member"},
+    "-1001000000003": "Hiking club"
+  },
+  "lang": "auto"
+}

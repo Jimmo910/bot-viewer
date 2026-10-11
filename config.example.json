@@ -1,0 +1,15 @@
+{
+  "_comment": "Copy to config.json and edit. Relative paths are resolved against this file's folder.",
+  "bot_name": "my_bot",
+  "title": "Bot chats",
+  "journals": [
+    "~/my-bot/data/journal.jsonl"
+  ],
+  "chats": {
+    "123456789": {"name": "Alice", "role": "owner"},
+    "987654321": "Bob"
+  },
+  "lang": "auto",
+  "port": 8797,
+  "idle_exit": 1800
+}

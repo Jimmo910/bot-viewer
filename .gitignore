@@ -1,0 +1,10 @@
+# personal settings and data — never commit
+/config.json
+data/
+run/
+*.jsonl
+!demo/*.jsonl
+
+__pycache__/
+*.pyc
+.DS_Store

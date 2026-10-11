@@ -1,0 +1,27 @@
+{"time": "2026-10-09 18:02:11", "dir": "in", "chat_id": 100000001, "message_id": 1, "user": "Alex", "text": "/start", "via": "telegram"}
+{"time": "2026-10-09 18:02:12", "dir": "out", "chat_id": 100000001, "message_id": 2, "text": "Hi Alex! I'm the trip helper. Send me plans, photos or questions about the weekend hike.", "via": "auto"}
+{"time": "2026-10-09 18:05:40", "dir": "in", "chat_id": 100000001, "message_id": 3, "user": "Alex", "text": "What's the forecast for Saturday at the lake?", "via": "telegram"}
+{"time": "2026-10-09 18:06:02", "dir": "out", "chat_id": 100000001, "message_id": 4, "text": "Saturday: sunny in the morning, 14 °C, light wind. Showers are likely after 17:00, so plan to be back below the ridge by then.", "reply_to": 3, "via": "bot_reply"}
+{"time": "2026-10-09 18:07:15", "dir": "in", "chat_id": 100000001, "message_id": 5, "user": "Alex", "text": "Great, let's start at 8 then", "via": "telegram"}
+{"time": "2026-10-09 18:07:20", "dir": "out", "chat_id": 100000001, "message_id": 6, "text": "Noted: start at 08:00 from the north parking lot.", "silent": true, "via": "bot_reply"}
+{"time": "2026-10-10 09:12:03", "dir": "in", "chat_id": 100000001, "message_id": 7, "user": "Alex", "text": "Here is the route we agreed on", "via": "telegram", "attachments": [{"kind": "photo", "path": "files/trail-map.png"}]}
+{"time": "2026-10-10 09:12:30", "dir": "out", "chat_id": 100000001, "message_id": 8, "text": "Got it. 11.4 km, about 650 m of ascent, roughly 4.5 hours with breaks.", "via": "bot_reply"}
+{"time": "2026-10-10 09:20:44", "dir": "in", "chat_id": 100000001, "message_id": 9, "user": "Alex", "text": "Can you send the packing list?", "via": "telegram"}
+{"time": "2026-10-10 09:21:01", "dir": "out", "chat_id": 100000001, "message_id": 10, "text": "Here you go:", "attachments": [{"kind": "document", "path": "files/packing-list.txt"}], "via": "bot_reply"}
+{"time": "2026-10-10 10:01:00", "dir": "in", "chat_id": 100000002, "message_id": 1, "user": "Sam", "text": "/start", "via": "telegram"}
+{"time": "2026-10-10 10:01:01", "dir": "out", "chat_id": 100000002, "message_id": 2, "text": "Hi Sam! Alex added you to the trip. Ask me anything about the hike.", "via": "auto"}
+{"time": "2026-10-10 10:03:27", "dir": "in", "chat_id": 100000002, "message_id": 3, "user": "Sam", "text": "Is there drinking water on the way?", "via": "telegram"}
+{"time": "2026-10-10 10:04:05", "dir": "out", "chat_id": 100000002, "message_id": 4, "text": "There is a spring at km 6 (marked on the map), but take at least 2 l with you.", "reply_to": 3, "via": "bot_reply"}
+{"time": "2026-10-10 10:06:12", "dir": "in", "chat_id": 100000002, "message_id": 5, "user": "Sam", "text": "My GoPro video from last time", "via": "telegram", "attachments": [{"kind": "video", "name": "ridge-2025.mp4", "note": "212.4 MB, larger than the 20 MB Bot API download limit"}]}
+{"time": "2026-10-10 10:06:30", "dir": "out", "chat_id": 100000002, "message_id": 6, "text": "Telegram bots can only download files up to 20 MB, so I can't fetch this one. Could you share a link instead?", "via": "bot_reply"}
+{"time": "2026-10-10 19:15:00", "dir": "in", "chat_id": -1001000000003, "message_id": 1, "text": "Who is driving on Saturday?", "user": "Jordan", "via": "telegram"}
+{"time": "2026-10-10 19:16:12", "dir": "in", "chat_id": -1001000000003, "message_id": 2, "text": "I can take three people", "user": "Riley", "via": "telegram"}
+{"time": "2026-10-10 19:16:40", "dir": "out", "chat_id": -1001000000003, "message_id": 3, "text": "Riley drives: 3 seats. Still need a car for 2 more people.", "via": "bot_reply"}
+{"time": "2026-10-10 19:20:05", "dir": "in", "chat_id": -1001000000003, "message_id": 4, "text": "I'll take my car too", "user": "Jordan", "via": "telegram"}
+{"time": "2026-10-10 19:20:20", "dir": "out", "chat_id": -1001000000003, "message_id": 5, "text": "All set: Riley (3) and Jordan (2). Meeting at 07:30 at the station.", "via": "bot_reply"}
+{"time": "2026-10-10 21:40:10", "dir": "in", "chat_id": 100000001, "message_id": 11, "user": "Alex", "text": "Bring the camera tomorrow", "via": "telegram"}
+{"time": "2026-10-10 21:40:10", "dir": "in", "chat_id": 100000001, "message_id": 11, "user": "Alex", "text": "Bring the camera and a spare battery tomorrow", "edited": true, "edit_time": "2026-10-10 21:41:02", "via": "telegram"}
+{"time": "2026-10-11 07:31:55", "dir": "in", "chat_id": 100000001, "message_id": 12, "user": "Alex", "text": "View from the first stop!", "via": "telegram", "attachments": [{"kind": "photo", "path": "files/sunset.png"}]}
+{"time": "2026-10-11 07:32:20", "dir": "out", "chat_id": 100000001, "message_id": 13, "text": "Beautiful! Sunrise was at 07:18, you are right on schedule.", "via": "bot_reply"}
+{"time": "2026-10-11 07:40:02", "dir": "in", "chat_id": 100000001, "message_id": 14, "user": "Alex", "via": "telegram", "forward": "Weather Alerts", "attachments": [{"kind": "voice", "note": "0:07, not downloaded"}]}
+{"time": "2026-10-11 07:40:30", "dir": "out", "chat_id": 100000001, "message_id": 15, "text": "The alert is for the next valley; your route is not affected.", "via": "bot_reply"}

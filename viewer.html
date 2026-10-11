@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Bot chats</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232f7fd8'/%3E%3Cpath d='M14 20a6 6 0 0 1 6-6h24a6 6 0 0 1 6 6v16a6 6 0 0 1-6 6H28l-9 8v-8h1a6 6 0 0 1-6-6z' fill='white'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #e9edf1; --side: #ffffff; --side-hover: #f2f4f7; --side-active: #2f7fd8; --side-active-text: #fff;
+  --line: #dde2e8; --text: #16191d; --muted: #6b7480; --faint: #99a1ab;
+  --in: #ffffff; --out: #dff4d3; --out-meta: #5d8a4c; --in-meta: #8a939e;
+  --accent: #2f7fd8; --accent-soft: rgba(47,127,216,.12); --quote: #2f7fd8;
+  --chip: rgba(0,0,0,.06); --mark: #ffe58a; --shadow: 0 1px 1.5px rgba(16,24,40,.12);
+  --day: rgba(255,255,255,.85); --day-text: #4a525c; --warn: #b4462e;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1217; --side: #161b22; --side-hover: #1d242d; --side-active: #2b5c95; --side-active-text: #fff;
+    --line: #262d36; --text: #e5e8ec; --muted: #8d97a3; --faint: #66707b;
+    --in: #1d242d; --out: #2a4c6f; --out-meta: #9db8d4; --in-meta: #7f8995;
+    --accent: #5aa2f0; --accent-soft: rgba(90,162,240,.16); --quote: #6fb1f5;
+    --chip: rgba(255,255,255,.07); --mark: #7a6312; --shadow: 0 1px 1.5px rgba(0,0,0,.4);
+    --day: rgba(30,37,46,.9); --day-text: #b6bec8; --warn: #f08a6e;
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14.5px/1.42 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  display: flex; overflow: hidden;
+}
+button { font: inherit; color: inherit; }
+
+/* ── Chat list ── */
+#side { width: 320px; min-width: 260px; background: var(--side); border-right: 1px solid var(--line);
+        display: flex; flex-direction: column; }
+.side-head { padding: 14px 14px 10px; border-bottom: 1px solid var(--line); }
+.side-title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.side-title h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: -.01em; }
+.side-title .bot { color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#q { width: 100%; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line);
+     background: var(--bg); color: var(--text); font: inherit; outline: none; }
+#q:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+#chats { flex: 1; overflow-y: auto; padding: 6px; }
+.chat { display: flex; gap: 11px; align-items: center; padding: 9px 10px; border-radius: 12px; cursor: pointer;
+        border: 0; background: none; width: 100%; text-align: left; }
+.chat:hover { background: var(--side-hover); }
+.chat.active { background: var(--side-active); color: var(--side-active-text); }
+.chat.active .prev, .chat.active .when { color: rgba(255,255,255,.82); }
+.ava { width: 46px; height: 46px; border-radius: 50%; flex: none; display: grid; place-items: center;
+       color: #fff; font-weight: 650; font-size: 18px; }
+.chat .body { flex: 1; min-width: 0; }
+.chat .row1 { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.chat .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat .when { color: var(--faint); font-size: 12px; flex: none; }
+.chat .row2 { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-top: 2px; }
+.chat .prev { color: var(--muted); font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.badge { background: var(--accent); color: #fff; border-radius: 10px; font-size: 12px; font-weight: 600;
+         padding: 1px 7px; flex: none; }
+.chat.active .badge { background: #fff; color: var(--side-active); }
+.side-foot { padding: 10px 14px; border-top: 1px solid var(--line); color: var(--faint); font-size: 12px; }
+.side-foot .live { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #3fb950;
+                   margin-right: 6px; vertical-align: 1px; }
+.side-foot .live.off { background: var(--warn); }
+
+/* ── Feed ── */
+#main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+.main-head { height: 60px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 18px;
+             background: var(--side); border-bottom: 1px solid var(--line); }
+.main-head .ava { width: 38px; height: 38px; font-size: 15px; }
+.main-head .t { font-weight: 650; }
+.main-head .s { color: var(--muted); font-size: 12.5px; }
+#back { display: none; border: 0; background: none; cursor: pointer; padding: 6px 8px 6px 0; color: var(--accent);
+        font-size: 15px; }
+#feed { flex: 1; overflow-y: auto; padding: 14px 6% 22px; scroll-behavior: auto; }
+.empty { color: var(--muted); text-align: center; margin-top: 30vh; }
+.day { text-align: center; margin: 14px 0 10px; }
+.day span { background: var(--day); color: var(--day-text); font-size: 12.5px; font-weight: 600;
+            padding: 3px 11px; border-radius: 12px; box-shadow: var(--shadow); }
+.msg { display: flex; margin: 3px 0; }
+.msg.out { justify-content: flex-end; }
+.bubble { max-width: min(560px, 78%); background: var(--in); border-radius: 14px; padding: 7px 10px 6px;
+          box-shadow: var(--shadow); position: relative; min-width: 84px; overflow-wrap: anywhere; }
+.msg.in .bubble { border-bottom-left-radius: 5px; }
+.msg.out .bubble { background: var(--out); border-bottom-right-radius: 5px; }
+.msg.flash .bubble { animation: flash 1.6s ease-out; }
+@keyframes flash { 0%, 30% { box-shadow: 0 0 0 3px var(--accent); } 100% { box-shadow: var(--shadow); } }
+.text { white-space: pre-wrap; }
+.text a { color: var(--accent); }
+mark { background: var(--mark); color: inherit; border-radius: 3px; padding: 0 1px; }
+.from { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.fwd { color: var(--quote); font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.quote { display: block; border-left: 3px solid var(--quote); background: var(--accent-soft); border-radius: 5px;
+         padding: 3px 8px; margin: 1px 0 5px; font-size: 13px; color: var(--muted); cursor: pointer;
+         white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
+.quote b { color: var(--quote); display: block; font-weight: 600; }
+.meta { display: flex; gap: 6px; justify-content: flex-end; align-items: center; font-size: 11.5px;
+        color: var(--in-meta); margin-top: 2px; user-select: none; }
+.msg.out .meta { color: var(--out-meta); }
+.tag { background: var(--chip); border-radius: 6px; padding: 0 5px; }
+.atts { display: flex; flex-direction: column; gap: 6px; margin: 2px 0 4px; }
+.atts img { display: block; max-width: 100%; max-height: 360px; border-radius: 10px; cursor: zoom-in; background: var(--chip); }
+.atts video { display: block; max-width: 100%; max-height: 380px; border-radius: 10px; background: #000; }
+.atts audio { width: 280px; max-width: 100%; height: 36px; }
+.file { display: flex; gap: 10px; align-items: center; background: var(--chip); border-radius: 10px; padding: 8px 10px; }
+.file .ico { width: 38px; height: 38px; border-radius: 50%; background: var(--accent); color: #fff; flex: none;
+             display: grid; place-items: center; font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+.file.missing .ico { background: var(--faint); }
+.file .fn { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file .fs { color: var(--muted); font-size: 12.5px; }
+.file .info { min-width: 0; flex: 1; }
+.acts { display: flex; gap: 10px; font-size: 12.5px; margin-top: 2px; }
+.acts button { border: 0; background: none; padding: 0; color: var(--accent); cursor: pointer; }
+.acts button:hover { text-decoration: underline; }
+#down { position: absolute; right: 22px; bottom: 22px; border: 0; border-radius: 18px; padding: 8px 14px;
+        background: var(--accent); color: #fff; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,.25);
+        cursor: pointer; display: none; }
+#banner { display: none; background: var(--warn); color: #fff; padding: 8px 18px; font-size: 13px; }
+
+@media (max-width: 720px) {
+  #side { width: 100%; min-width: 0; border-right: 0; }
+  #main { display: none; }
+  body.open #side { display: none; }
+  body.open #main { display: flex; }
+  #back { display: block; }
+  #feed { padding: 10px 10px 18px; }
+  .bubble { max-width: 88%; }
+}
+</style>
+</head>
+<body>
+<aside id="side">
+  <div class="side-head">
+    <div class="side-title"><h1 id="title"></h1><span class="bot" id="botname"></span></div>
+    <input id="q" type="search" autocomplete="off" spellcheck="false">
+  </div>
+  <div id="chats"></div>
+  <div class="side-foot" id="foot"><span class="live"></span>…</div>
+</aside>
+<main id="main">
+  <div id="banner"></div>
+  <div class="main-head" id="head"></div>
+  <div id="feed"></div>
+  <button id="down" type="button"></button>
+</main>
+<script>
+"use strict";
+const $ = (s) => document.querySelector(s);
+const I18N = {
+  en: {
+    title: "Bot chats", search: "Search messages", loading: "loading…", pick: "Select a chat", noMsgs: "no messages",
+    bot: "Bot", nothing: "No matches", empty: "No messages yet", today: "Today", yesterday: "Yesterday", noDate: "no date",
+    open: "Open", reveal: "Show in folder", revealMac: "Show in Finder", gone: "file is no longer on disk: ",
+    auto: "auto-reply", autoTip: "Sent automatically by the bot", silent: "silent", silentTip: "Sent without notification",
+    edited: "edited", editedAt: "edited ", fwd: "Forwarded from ", owner: "bot owner", unknown: "not in config",
+    msgs: (n) => n + (n === 1 ? " message" : " messages"), live: "live", off: "no connection to the viewer",
+    banner: "The viewer server is not running. Start it again: python3 bot_viewer.py",
+    newMsgs: "New messages ↓", back: "‹ Chats", attachment: "Attachment", units: ["B", "KB", "MB"],
+    kinds: { photo: "Photo", video: "Video", video_note: "Video message", animation: "GIF", voice: "Voice message",
+             audio: "Audio", document: "File", sticker: "Sticker", location: "Location", contact: "Contact", poll: "Poll" },
+  },
+  ru: {
+    title: "Бот-чаты", search: "Поиск по сообщениям", loading: "загрузка…", pick: "Выберите чат", noMsgs: "нет сообщений",
+    bot: "Бот", nothing: "Ничего не найдено", empty: "Сообщений пока нет", today: "Сегодня", yesterday: "Вчера", noDate: "без даты",
+    open: "Открыть", reveal: "Показать в папке", revealMac: "Показать в Finder", gone: "файла уже нет на диске: ",
+    auto: "автоответ", autoTip: "Бот ответил сам", silent: "без звука", silentTip: "Отправлено без звука",
+    edited: "изменено", editedAt: "изменено ", fwd: "Переслано от ", owner: "владелец бота", unknown: "нет в конфиге",
+    msgs: (n) => n + " сообщ.", live: "обновляется", off: "нет связи с просмотрщиком",
+    banner: "Сервер просмотрщика не запущен. Запустите снова: python3 bot_viewer.py",
+    newMsgs: "Новые сообщения ↓", back: "‹ Чаты", attachment: "Вложение", units: ["Б", "КБ", "МБ"],
+    kinds: { photo: "Фото", video: "Видео", video_note: "Видеосообщение", animation: "GIF", voice: "Голосовое",
+             audio: "Аудио", document: "Файл", sticker: "Стикер", location: "Геопозиция", contact: "Контакт", poll: "Опрос" },
+  },
+};
+/* attachment "kind" → label key; Russian prefixes are accepted too */
+const KINDS = [["photo", "фото"], ["video_note", "видеосообщение"], ["video", "видео"], ["animation", "gif"],
+  ["voice", "голосовое"], ["audio", "аудио"], ["document", "файл"], ["file", "файл"], ["sticker", "стикер"],
+  ["location", "геопозиция"], ["contact", "контакт"], ["poll", "опрос"]];
+let LANG = "en", T = I18N.en;
+const IS_MAC = /Mac/i.test(navigator.platform || navigator.userAgent);
+let stick = true;   /* the feed is pinned to the bottom: images/videos loading later do not move it */
+const S = { data: null, stamp: "", chat: null, q: "", rendered: [], renderedFor: "", seen: {}, ok: true, lastOk: null };
+const COLORS = ["#e17076", "#7bc862", "#65aadd", "#a695e7", "#ee7aae", "#6ec9cb", "#faa774"];
+
+function setLang(pref) {
+  const nav = (navigator.language || "en").toLowerCase();
+  LANG = pref && I18N[pref] ? pref : (nav.startsWith("ru") ? "ru" : "en");
+  T = I18N[LANG];
+  document.documentElement.lang = LANG;
+  $("#q").placeholder = T.search; $("#down").textContent = T.newMsgs;
+}
+function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function color(id) { return COLORS[Math.abs(Number(id)) % COLORS.length]; }
+function day(t) { return String(t || "").slice(0, 10); }
+function hm(t) { return String(t || "").slice(11, 16); }
+function iso(x) { const p = (n) => String(n).padStart(2, "0"); return `${x.getFullYear()}-${p(x.getMonth() + 1)}-${p(x.getDate())}`; }
+function dayLabel(d, short) {
+  if (!d) return T.noDate;
+  const now = new Date();
+  if (d === iso(now)) return T.today;
+  const y = new Date(now); y.setDate(now.getDate() - 1);
+  if (d === iso(y)) return T.yesterday;
+  const [Y, M, D] = d.split("-").map(Number);
+  const opts = { day: "numeric", month: "long" };
+  if (Y !== now.getFullYear() && !short) opts.year = "numeric";
+  try { return new Intl.DateTimeFormat(LANG, opts).format(new Date(Y, M - 1, D)); } catch (e) { return d; }
+}
+function shortWhen(t) { return day(t) === iso(new Date()) ? hm(t) : dayLabel(day(t), true); }
+function size(n) {
+  if (!n) return "";
+  const u = T.units;
+  if (n < 1024) return n + " " + u[0];
+  if (n < 1048576) return (n / 1024).toFixed(0) + " " + u[1];
+  return (n / 1048576).toLocaleString(LANG, { maximumFractionDigits: 1, minimumFractionDigits: 1 }) + " " + u[2];
+}
+function kindKey(k) {
+  k = String(k || "").toLowerCase();
+  for (const [en, ru] of KINDS) if (k.startsWith(en) || k.startsWith(ru)) return en === "file" ? "document" : en;
+  return "";
+}
+function attLabel(a) {
+  const k = kindKey(a.kind);
+  if (k === "sticker" && a.note) return a.note;
+  return k ? T.kinds[k] : (a.kind || T.attachment);
+}
+function preview(m) {
+  if (!m) return "";
+  const a = (m.attachments || [])[0];
+  const t = (m.text || "").replace(/\s+/g, " ").trim();
+  const head = m.dir === "out" ? T.bot + ": " : "";
+  if (a) return head + "[" + attLabel(a) + (a.name && kindKey(a.kind) !== "photo" ? " " + a.name : "") + "]" + (t ? " " + t : "");
+  return head + t;
+}
+function mk(raw) {
+  /* escape and highlight the search term (in the source text, not in HTML) */
+  const s = String(raw == null ? "" : raw);
+  if (!S.q) return esc(s);
+  const re = new RegExp("(" + S.q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi");
+  return s.split(re).map((p, i) => i % 2 ? "<mark>" + esc(p) + "</mark>" : esc(p)).join("");
+}
+function rich(t) {
+  const re = /\bhttps?:\/\/[^\s<>"']+[^\s<>"'.,;:!?)»]/g;
+  let out = "", last = 0, m;
+  while ((m = re.exec(t))) {
+    out += mk(t.slice(last, m.index)) + `<a href="${esc(m[0])}" target="_blank" rel="noopener noreferrer">${mk(m[0])}</a>`;
+    last = m.index + m[0].length;
+  }
+  return out + mk(t.slice(last));
+}
+function matches(m) {
+  if (!S.q) return true;
+  const q = S.q.toLowerCase();
+  const hay = [m.text, m.user, m.forward, m.reply_quote, ...(m.attachments || []).map(a => [a.kind, a.name, a.note].join(" "))].join(" ").toLowerCase();
+  return hay.includes(q);
+}
+function key(m) { return m.dir + ":" + m.chat_id + ":" + (m.message_id || m.time); }
+
+function attHtml(a) {
+  const id = a.id, src = id ? `/file/${id}/${encodeURIComponent(a.name || "file")}` : "";
+  const acts = id ? `<div class="acts"><button data-act="open" data-id="${id}" type="button">${T.open}</button><button data-act="reveal" data-id="${id}" type="button">${IS_MAC ? T.revealMac : T.reveal}</button></div>` : "";
+  if (id && a.type === "image")
+    return `<div><a href="${src}" target="_blank" rel="noopener"><img src="${src}" loading="lazy" alt="${esc(a.name)}"></a></div>`;
+  if (id && a.type === "video")
+    return `<div><video controls preload="metadata" src="${src}"></video><div class="fs" style="margin-top:3px" title="${esc(a.path || "")}">${mk(a.name || attLabel(a))} · ${size(a.size)}</div>${acts}</div>`;
+  if (id && a.type === "audio")
+    return `<div><div class="fs" title="${esc(a.path || "")}">${mk(attLabel(a))}${a.size ? " · " + size(a.size) : ""}</div><audio controls preload="none" src="${src}"></audio>${acts}</div>`;
+  const ext = ((a.name || "").split(".").pop() || "").slice(0, 4).toUpperCase();
+  const note = a.missing ? T.gone + a.path : (a.note || "");
+  const sub = [size(a.size), note].filter(Boolean).join(" · ");
+  return `<div class="file${id ? "" : " missing"}"><div class="ico">${esc(ext && a.name && a.name.includes(".") ? ext : "•")}</div>
+    <div class="info"><div class="fn" title="${esc(a.path || a.name || "")}">${mk(a.name || attLabel(a))}</div>
+    <div class="fs">${mk(sub || attLabel(a))}</div>${acts}</div></div>`;
+}
+
+function msgHtml(m, byId) {
+  let h = "";
+  if (S.cur && S.cur.group && m.dir === "in" && m.user) h += `<div class="from" style="color:${color(m.user.length * 7 + m.user.charCodeAt(0))}">${mk(m.user)}</div>`;
+  if (m.forward) h += `<div class="fwd">${esc(T.fwd)}${mk(m.forward)}</div>`;
+  if (m.reply_to || m.reply_quote) {
+    const t = byId.get(m.reply_to);
+    const who = t ? (t.dir === "out" ? T.bot : t.user || (S.cur && S.cur.name) || "") : "";
+    const q = (t && t.text) ? t.text : (m.reply_quote || (t && t.attachments ? "[" + attLabel(t.attachments[0]) + "]" : ""));
+    h += `<a class="quote" data-to="${t ? esc(key(t)) : ""}" title="${esc(q)}">${who ? "<b>" + esc(who) + "</b>" : ""}${mk(q.replace(/\s+/g, " ").slice(0, 200))}</a>`;
+  }
+  if (m.attachments && m.attachments.length) h += `<div class="atts">${m.attachments.map(attHtml).join("")}</div>`;
+  if (m.text) h += `<div class="text">${rich(m.text)}</div>`;
+  const tags = [];
+  if (m.via === "auto" || m.via === "bot") tags.push(`<span class="tag" title="${esc(T.autoTip)}">${T.auto}</span>`);
+  if (m.silent) tags.push(`<span class="tag" title="${esc(T.silentTip)}">${T.silent}</span>`);
+  if (m.edited) tags.push(`<span title="${esc(typeof m.edited === "string" ? T.editedAt + m.edited : "")}">${T.edited}</span>`);
+  h += `<div class="meta">${tags.join("")}<time title="${esc(m.time)}${m.message_id ? " · id " + m.message_id : ""}${m.via ? " · " + esc(m.via) : ""}">${hm(m.time)}</time></div>`;
+  return `<div class="msg ${m.dir}" id="${esc(key(m))}"><div class="bubble">${h}</div></div>`;
+}
+
+function chatMsgs(cid) { return S.data.messages.filter(m => m.chat_id === cid); }
+
+function renderChats() {
+  const rows = S.data.chats.map(c => {
+    const ms = chatMsgs(c.id), last = ms[ms.length - 1];
+    const seen = S.seen[c.id];
+    const unread = seen == null ? 0 : ms.filter(m => m.dir === "in" && (m.message_id || 0) > seen).length;
+    const hits = S.q ? ms.filter(matches).length : 0;
+    const badge = S.q ? (hits ? `<span class="badge">${hits}</span>` : "") : (unread && c.id !== S.chat ? `<span class="badge">${unread}</span>` : "");
+    return `<button class="chat${c.id === S.chat ? " active" : ""}" data-id="${c.id}" type="button">
+      <div class="ava" style="background:${color(c.id)}">${esc((c.name || "?")[0].toUpperCase())}</div>
+      <div class="body"><div class="row1"><span class="name">${esc(c.name)}</span><span class="when">${last ? esc(shortWhen(last.time)) : ""}</span></div>
+      <div class="row2"><span class="prev">${esc(last ? preview(last) : T.noMsgs)}</span>${badge}</div></div></button>`;
+  });
+  $("#chats").innerHTML = rows.join("");
+}
+
+function renderHead() {
+  const c = S.cur;
+  if (!c) { $("#head").innerHTML = ""; return; }
+  const role = c.role === "owner" ? T.owner : c.role ? c.role : c.configured ? "" : T.unknown;
+  const sub = [role, T.msgs(chatMsgs(c.id).length), "id " + c.id].filter(Boolean).join(" · ");
+  $("#head").innerHTML = `<button id="back" type="button">${T.back}</button><div class="ava" style="background:${color(c.id)}">${esc((c.name || "?")[0].toUpperCase())}</div>
+    <div><div class="t">${esc(c.name)}</div><div class="s">${esc(sub)}</div></div>`;
+  $("#back").onclick = () => { document.body.classList.remove("open"); };
+}
+
+function renderFeed(forceBottom) {
+  const feed = $("#feed");
+  if (!S.cur) { feed.innerHTML = `<div class="empty">${T.pick}</div>`; S.rendered = []; return; }
+  const all = chatMsgs(S.cur.id), byId = new Map();
+  for (const m of all) if (m.message_id) { if (!byId.has(m.message_id) || m.dir === "out") byId.set(m.message_id, m); }
+  const ms = all.filter(matches);
+  const items = [];
+  let prevDay = null;
+  for (const m of ms) {
+    const d = day(m.time);
+    if (d !== prevDay) { items.push(["day:" + d, `<div class="day"><span>${esc(dayLabel(d))}</span></div>`]); prevDay = d; }
+    items.push([key(m), msgHtml(m, byId)]);
+  }
+  const forKey = S.cur.id + "|" + S.q;
+  const nearBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 120;
+  const old = S.rendered, same = S.renderedFor === forKey;
+  let prefix = same && old.length <= items.length;
+  if (prefix) for (let i = 0; i < old.length; i++) if (old[i][0] !== items[i][0] || old[i][1] !== items[i][1]) { prefix = false; break; }
+  if (!items.length) {
+    feed.innerHTML = `<div class="empty">${S.q ? T.nothing : T.empty}</div>`;
+  } else if (prefix) {
+    if (items.length === old.length) return;
+    feed.insertAdjacentHTML("beforeend", items.slice(old.length).map(x => x[1]).join(""));
+  } else {
+    const keep = same ? feed.scrollTop : null;
+    feed.innerHTML = items.map(x => x[1]).join("");
+    if (keep != null && !forceBottom) feed.scrollTop = keep;
+  }
+  const grew = same && items.length > old.length;
+  S.rendered = items; S.renderedFor = forKey;
+  if (forceBottom || !same || (grew && nearBottom)) { feed.scrollTop = feed.scrollHeight; stick = true; $("#down").style.display = "none"; }
+  else if (grew) $("#down").style.display = "block";
+}
+
+function markSeen() {
+  if (!S.cur || document.visibilityState !== "visible") return;
+  const max = chatMsgs(S.cur.id).reduce((a, m) => Math.max(a, m.dir === "in" ? (m.message_id || 0) : 0), 0);
+  if ((S.seen[S.cur.id] || 0) < max) { S.seen[S.cur.id] = max; store("bv-seen", S.seen); }
+}
+
+function render(forceBottom) {
+  if (!S.data) return;
+  if (S.chat == null || !S.data.chats.some(c => c.id === S.chat)) {
+    const withMsgs = S.data.chats.filter(c => c.count);
+    S.chat = (withMsgs.find(c => c.role === "owner") || withMsgs[0] || S.data.chats[0] || {}).id ?? null;
+  }
+  S.cur = S.data.chats.find(c => c.id === S.chat) || null;
+  $("#title").textContent = S.data.title || T.title;
+  document.title = S.data.title || T.title;
+  $("#botname").textContent = S.data.bot ? (S.data.bot.startsWith("@") ? S.data.bot : "@" + S.data.bot) : "";
+  renderHead(); renderFeed(forceBottom); markSeen(); renderChats(); renderFoot();
+}
+
+function renderFoot() {
+  const n = S.data ? S.data.messages.length : 0;
+  $("#foot").innerHTML = `<span class="live${S.ok ? "" : " off"}"></span>${S.ok ? T.live : T.off} · ${esc(T.msgs(n))}` +
+    (S.lastOk ? ` · ${S.lastOk.toTimeString().slice(0, 8)}` : "");
+}
+
+async function refresh() {
+  try {
+    const r = await fetch("/api/data?stamp=" + encodeURIComponent(S.stamp), { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    S.ok = true; S.lastOk = new Date(); $("#banner").style.display = "none";
+    if (!j.unchanged) {
+      const first = !S.data;
+      if (!S.data || S.data.lang !== j.lang) { setLang(j.lang); S.rendered = []; S.renderedFor = ""; }
+      S.data = j; S.stamp = j.stamp;
+      if (first) {
+        const saved = store("bv-seen");
+        if (saved && typeof saved === "object") S.seen = saved;
+        for (const c of j.chats) if (S.seen[c.id] == null) S.seen[c.id] = chatMsgs(c.id).reduce((a, m) => Math.max(a, m.dir === "in" ? (m.message_id || 0) : 0), 0);
+        store("bv-seen", S.seen);
+        const last = store("bv-chat"); if (last != null && j.chats.some(c => c.id === last)) S.chat = last;
+        const h = new URLSearchParams(location.hash.slice(1));      /* #chat=<id>&q=<text> */
+        if (h.get("chat") && j.chats.some(c => String(c.id) === h.get("chat"))) S.chat = Number(h.get("chat"));
+        if (h.get("q")) { S.q = h.get("q"); $("#q").value = S.q; }
+      }
+      render(first);
+    } else renderFoot();
+  } catch (e) {
+    S.ok = false; renderFoot();
+    const b = $("#banner"); b.textContent = T.banner; b.style.display = "block";
+  }
+}
+
+let timer = null;
+function schedule() { clearTimeout(timer); timer = setTimeout(async () => { await refresh(); schedule(); }, document.visibilityState === "visible" ? 3000 : 30000); }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.data) { refresh(); markSeen(); renderChats(); } schedule(); });
+
+$("#chats").addEventListener("click", (ev) => {
+  const b = ev.target.closest(".chat"); if (!b) return;
+  S.chat = Number(b.dataset.id); store("bv-chat", S.chat);
+  document.body.classList.add("open");
+  render(true);
+});
+let qt = null;
+$("#q").addEventListener("input", (ev) => { clearTimeout(qt); qt = setTimeout(() => { S.q = ev.target.value.trim(); render(true); }, 120); });
+$("#q").addEventListener("keydown", (ev) => { if (ev.key === "Escape") { ev.target.value = ""; S.q = ""; render(true); } });
+$("#feed").addEventListener("scroll", () => { const f = $("#feed"); stick = f.scrollHeight - f.scrollTop - f.clientHeight < 120; if (stick) $("#down").style.display = "none"; });
+for (const ev of ["load", "loadedmetadata"]) $("#feed").addEventListener(ev, () => { if (stick) { const f = $("#feed"); f.scrollTop = f.scrollHeight; } }, true);
+$("#down").addEventListener("click", () => { const f = $("#feed"); f.scrollTop = f.scrollHeight; $("#down").style.display = "none"; });
+$("#feed").addEventListener("click", async (ev) => {
+  const q = ev.target.closest(".quote");
+  if (q && q.dataset.to) {
+    let el = document.getElementById(q.dataset.to);
+    if (!el && S.q) { S.q = ""; $("#q").value = ""; render(); el = document.getElementById(q.dataset.to); }
+    if (el) { el.scrollIntoView({ block: "center" }); el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
+    return;
+  }
+  const b = ev.target.closest("button[data-act]");
+  if (b) {
+    try { await fetch(`/${b.dataset.act}/${b.dataset.id}`, { method: "POST" }); } catch (e) { /* server is down: refresh() shows the banner */ }
+  }
+});
+
+setLang("auto");
+$("#title").textContent = T.title;
+$("#feed").innerHTML = `<div class="empty">${T.loading}</div>`;
+refresh().then(schedule);
+</script>
+</body>
+</html>
